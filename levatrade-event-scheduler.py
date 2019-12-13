@@ -1,6 +1,7 @@
 import datetime
 import requests
 import boto3
+import json
 
 from datetime import datetime
 from pytz import timezone
@@ -20,7 +21,14 @@ def levatrade_trade_setups():
         'password':'Michaelwiggum1',
         'client_id':'BOBBYRITHM'
     }
-    requests.post(td_auth_endpoint, data=data)
+    headers = {
+        'ContentType': 'application/json'
+    }
+    td_auth_data = requests.post(td_auth_endpoint, data=json.dumps(data), headers=headers)
+    daily_settings_table.put_item(Item={
+                    'key': 'td_auth',
+                    'value': td_auth_data.text
+                })
 
 @sched.scheduled_job('cron', day_of_week='mon-fri', hour=10)
 def start_trading():
@@ -52,8 +60,11 @@ data = {
     'password':'Michaelwiggum1',
     'client_id':'BOBBYRITHM'
 }
-td_auth_data = requests.post(td_auth_endpoint, data=data)
+headers = {
+    'ContentType': 'application/json'
+}
+td_auth_data = requests.post(td_auth_endpoint, data=json.dumps(data), headers=headers)
 daily_settings_table.put_item(Item={
                 'key': 'td_auth',
-                'value': str(td_auth_data)
+                'value': td_auth_data.text
             })
